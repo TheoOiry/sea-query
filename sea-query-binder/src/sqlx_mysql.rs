@@ -91,7 +91,7 @@ impl<'q> sqlx::IntoArguments<'q, sqlx::mysql::MySql> for SqlxValues {
                 }
                 #[cfg(feature = "with-uuid")]
                 Value::Uuid(uuid) => {
-                    args.add(uuid.as_deref());
+                    args.add(uuid.map(|v| v.to_string()));
                 }
                 #[cfg(feature = "with-rust_decimal")]
                 Value::Decimal(d) => {
@@ -110,12 +110,12 @@ impl<'q> sqlx::IntoArguments<'q, sqlx::mysql::MySql> for SqlxValues {
                     panic!("Mysql doesn't support array arguments");
                 }
                 #[cfg(feature = "with-ipnetwork")]
-                Value::IpNetwork(_) => {
-                    panic!("Mysql doesn't support IpNetwork arguments");
+                Value::IpNetwork(i) => {
+                    args.add(i.map(|i| i.to_string()))
                 }
                 #[cfg(feature = "with-mac_address")]
-                Value::MacAddress(_) => {
-                    panic!("Mysql doesn't support MacAddress arguments");
+                Value::MacAddress(m) => {
+                    args.add(m.map(|m| m.to_string()))
                 }
             }
         }
