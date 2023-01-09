@@ -19,15 +19,12 @@ use crate::values::EnumValue;
 use crate::SqlxValues;
 use sqlx::database::HasArguments;
 use sqlx::encode::IsNull;
-use sqlx::postgres::types::Oid;
 use sqlx::Database;
 use sqlx::Postgres;
 
 impl<'q> sqlx::Encode<'q, Postgres> for EnumValue {
     fn produces(&self) -> Option<<Postgres as Database>::TypeInfo> {
-        Some(<Postgres as Database>::TypeInfo::with_oid(Oid(
-            self.postgres_oid
-        )))
+        Some(<Postgres as Database>::TypeInfo::with_dynamic_name(&self.name))
     }
 
     fn encode(self, buf: &mut <Postgres as HasArguments<'q>>::ArgumentBuffer) -> IsNull
@@ -98,8 +95,8 @@ impl<'q> sqlx::IntoArguments<'q, sqlx::postgres::Postgres> for SqlxValues {
                 Value::Bytes(b) => {
                     args.add(b.as_deref());
                 }
-                Value::Enum(postgres_oid, value) => args.add(EnumValue {
-                    postgres_oid,
+                Value::Enum(name, value) => args.add(EnumValue {
+                    name,
                     value,
                 }),
                 #[cfg(feature = "with-chrono")]

@@ -75,8 +75,8 @@ impl<'q> sqlx::IntoArguments<'q, sqlx::mysql::MySql> for SqlxValues {
                 Value::Bytes(b) => {
                     args.add(b.as_deref());
                 }
-                Value::Enum(.., value) => args.add(EnumValue {
-                    postgres_oid: 0,
+                Value::Enum(name, value) => args.add(EnumValue {
+                    name,
                     value,
                 }),
                 #[cfg(feature = "with-chrono")]
