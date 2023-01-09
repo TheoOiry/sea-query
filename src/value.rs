@@ -136,6 +136,8 @@ pub enum Value {
     #[allow(clippy::box_collection)]
     Bytes(Option<Box<Vec<u8>>>),
 
+    Enum(u32, Option<Box<String>>),
+
     #[cfg(feature = "with-json")]
     #[cfg_attr(docsrs, doc(cfg(feature = "with-json")))]
     Json(Option<Box<Json>>),

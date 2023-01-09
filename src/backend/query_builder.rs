@@ -931,7 +931,8 @@ pub trait QueryBuilder: QuotedBuilder + EscapeBuilder + TableRefBuilder {
             | Value::Double(None)
             | Value::String(None)
             | Value::Char(None)
-            | Value::Bytes(None) => write!(s, "NULL").unwrap(),
+            | Value::Bytes(None)
+            | Value::Enum(.., None) => write!(s, "NULL").unwrap(),
             #[cfg(feature = "with-json")]
             Value::Json(None) => write!(s, "NULL").unwrap(),
             #[cfg(feature = "with-chrono")]
@@ -987,6 +988,7 @@ pub trait QueryBuilder: QuotedBuilder + EscapeBuilder + TableRefBuilder {
                 v.iter().map(|b| format!("{:02X}", b)).collect::<String>()
             )
             .unwrap(),
+            Value::Enum(.., Some(v)) => self.write_string_quoted(v, &mut s),
             #[cfg(feature = "with-json")]
             Value::Json(Some(v)) => self.write_string_quoted(&v.to_string(), &mut s),
             #[cfg(feature = "with-chrono")]
