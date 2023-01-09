@@ -1,5 +1,31 @@
+use crate::values::EnumValue;
 use crate::SqlxValues;
 use sea_query::Value;
+use sqlx::database::HasArguments;
+use sqlx::encode::IsNull;
+use sqlx::Database;
+use sqlx::MySql;
+
+impl<'q> sqlx::Encode<'q, MySql> for EnumValue {
+    fn encode(self, buf: &mut <MySql as HasArguments<'q>>::ArgumentBuffer) -> IsNull
+    where
+        Self: Sized,
+    {
+        let v = self.value.map(|v| *v);
+        <Option<String> as sqlx::Encode<MySql>>::encode(v, buf)
+    }
+
+    fn encode_by_ref(&self, buf: &mut <MySql as HasArguments>::ArgumentBuffer) -> IsNull {
+        let v = self.value.as_deref();
+        <Option<&String> as sqlx::Encode<MySql>>::encode_by_ref(&v, buf)
+    }
+}
+
+impl sqlx::Type<MySql> for EnumValue {
+    fn type_info() -> <MySql as Database>::TypeInfo {
+        <MySql as Database>::TypeInfo::__enum()
+    }
+}
 
 impl<'q> sqlx::IntoArguments<'q, sqlx::mysql::MySql> for SqlxValues {
     fn into_arguments(self) -> sqlx::mysql::MySqlArguments {
@@ -49,6 +75,10 @@ impl<'q> sqlx::IntoArguments<'q, sqlx::mysql::MySql> for SqlxValues {
                 Value::Bytes(b) => {
                     args.add(b.as_deref());
                 }
+                Value::Enum(.., value) => args.add(EnumValue {
+                    postgres_oid: 0,
+                    value,
+                }),
                 #[cfg(feature = "with-chrono")]
                 Value::ChronoDate(d) => {
                     args.add(d.as_deref());
@@ -110,13 +140,9 @@ impl<'q> sqlx::IntoArguments<'q, sqlx::mysql::MySql> for SqlxValues {
                     panic!("Mysql doesn't support array arguments");
                 }
                 #[cfg(feature = "with-ipnetwork")]
-                Value::IpNetwork(i) => {
-                    args.add(i.map(|i| i.to_string()))
-                }
+                Value::IpNetwork(i) => args.add(i.map(|i| i.to_string())),
                 #[cfg(feature = "with-mac_address")]
-                Value::MacAddress(m) => {
-                    args.add(m.map(|m| m.to_string()))
-                }
+                Value::MacAddress(m) => args.add(m.map(|m| m.to_string())),
             }
         }
         args

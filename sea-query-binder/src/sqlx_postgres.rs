@@ -13,21 +13,27 @@ use serde_json::Value as Json;
 #[cfg(feature = "with-uuid")]
 use uuid::Uuid;
 
-use sea_query::Value;
+use sea_query::{ArrayType, Value};
+
+use crate::values::EnumValue;
+use crate::SqlxValues;
 use sqlx::database::HasArguments;
 use sqlx::encode::IsNull;
-use sqlx::Postgres;
 use sqlx::postgres::types::Oid;
-use crate::SqlxValues;
-use crate::values::EnumValue;
 use sqlx::Database;
+use sqlx::Postgres;
 
 impl<'q> sqlx::Encode<'q, Postgres> for EnumValue {
     fn produces(&self) -> Option<<Postgres as Database>::TypeInfo> {
-        Some(<Postgres as Database>::TypeInfo::with_oid(Oid(self.postgres_oid)))
+        Some(<Postgres as Database>::TypeInfo::with_oid(Oid(
+            self.postgres_oid
+        )))
     }
 
-    fn encode(self, buf: &mut <Postgres as HasArguments<'q>>::ArgumentBuffer) -> IsNull where Self: Sized {
+    fn encode(self, buf: &mut <Postgres as HasArguments<'q>>::ArgumentBuffer) -> IsNull
+    where
+        Self: Sized,
+    {
         let v = self.value.map(|v| *v);
         <Option<String> as sqlx::Encode<Postgres>>::encode(v, buf)
     }
@@ -43,7 +49,6 @@ impl sqlx::Type<Postgres> for EnumValue {
         <&str as sqlx::Type<Postgres>>::type_info()
     }
 }
-
 
 impl<'q> sqlx::IntoArguments<'q, sqlx::postgres::Postgres> for SqlxValues {
     fn into_arguments(self) -> sqlx::postgres::PgArguments {
@@ -93,12 +98,10 @@ impl<'q> sqlx::IntoArguments<'q, sqlx::postgres::Postgres> for SqlxValues {
                 Value::Bytes(b) => {
                     args.add(b.as_deref());
                 }
-                Value::Enum(postgres_oid, value) => {
-                    args.add(EnumValue {
-                        postgres_oid,
-                        value,
-                    })
-                }
+                Value::Enum(postgres_oid, value) => args.add(EnumValue {
+                    postgres_oid,
+                    value,
+                }),
                 #[cfg(feature = "with-chrono")]
                 Value::ChronoDate(d) => {
                     args.add(d.as_deref());
