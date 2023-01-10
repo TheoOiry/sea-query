@@ -1310,6 +1310,7 @@ pub fn sea_value_to_json_value(value: &Value) -> Json {
         | Value::String(None)
         | Value::Char(None)
         | Value::Bytes(None)
+        | Value::Enum(.., None)
         | Value::Json(None) => Json::Null,
         #[cfg(feature = "with-rust_decimal")]
         Value::Decimal(None) => Json::Null,
@@ -1337,6 +1338,7 @@ pub fn sea_value_to_json_value(value: &Value) -> Json {
         Value::String(Some(s)) => Json::String(s.as_ref().clone()),
         Value::Char(Some(v)) => Json::String(v.to_string()),
         Value::Bytes(Some(s)) => Json::String(from_utf8(s).unwrap().to_string()),
+        Value::Enum(.., Some(s)) => Json::String(s.as_ref().clone()),
         Value::Json(Some(v)) => v.as_ref().clone(),
         #[cfg(feature = "with-chrono")]
         Value::ChronoDate(_) => CommonSqlQueryBuilder.value_to_string(value).into(),
