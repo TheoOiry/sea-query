@@ -1337,7 +1337,10 @@ pub fn sea_value_to_json_value(value: &Value) -> Json {
         Value::Double(Some(v)) => (*v).into(),
         Value::String(Some(s)) => Json::String(s.as_ref().clone()),
         Value::Char(Some(v)) => Json::String(v.to_string()),
-        Value::Bytes(Some(s)) => Json::String(from_utf8(s).unwrap().to_string()),
+        Value::Bytes(Some(v)) => Json::String(format!(
+            "x'{}'",
+            v.iter().map(|b| format!("{:02X}", b)).collect::<String>()
+        )),
         Value::Enum(.., Some(s)) => Json::String(s.as_ref().clone()),
         Value::Json(Some(v)) => v.as_ref().clone(),
         #[cfg(feature = "with-chrono")]
